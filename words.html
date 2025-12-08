@@ -207,7 +207,7 @@ function speakWord() {
 
     const utter = new SpeechSynthesisUtterance(words[index].word);
     utter.lang = "en-US";
-    utter.rate = 0.8;  // 발음 속도 0.8로 설정
+    utter.rate = 0.5;  // 발음 속도 0.8로 설정
     speechSynthesis.speak(utter);
 }
 
@@ -240,3 +240,4 @@ showWord();
 
 </body>
 </html>
+
