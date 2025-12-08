@@ -205,10 +205,31 @@ function speakWord() {
     // 이전 발음 중단
     speechSynthesis.cancel();
 
-    const utter = new SpeechSynthesisUtterance(words[index].word);
-    utter.lang = "en-US";
-    utter.rate = 0.5;  // 발음 속도 0.8로 설정
-    speechSynthesis.speak(utter);
+    // iOS Safari 버그 우회: 약간의 딜레이 후 실행
+    setTimeout(() => {
+        const utter = new SpeechSynthesisUtterance(words[index].word);
+        
+        // iOS에서 rate가 잘 적용되는 음성 찾기 (우선순위: Samantha > 로컬 영어 > 아무 영어)
+        const voices = speechSynthesis.getVoices();
+        const samantha = voices.find(v => v.name.includes('Samantha'));
+        const localEnglish = voices.find(v => v.lang.startsWith('en') && v.localService);
+        const anyEnglish = voices.find(v => v.lang.startsWith('en'));
+        
+        utter.voice = samantha || localEnglish || anyEnglish || null;
+        utter.lang = "en-US";
+        utter.rate = 0.6;   // 더 느리게 (iOS에서 체감되도록)
+        utter.pitch = 1;
+        
+        speechSynthesis.speak(utter);
+    }, 150);
+}
+
+// iOS Safari: 음성 목록 로딩을 위해 미리 초기화
+if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => {
+        speechSynthesis.getVoices();
+    };
 }
 
 function nextWord() {
@@ -240,4 +261,3 @@ showWord();
 
 </body>
 </html>
-
