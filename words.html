@@ -2,22 +2,36 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>초1 영어단어 학습</title>
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+    }
+
     body {
         font-family: Arial, sans-serif;
         background: #eef5ff;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        margin: 0;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        padding: 15px;
     }
 
     /* 전체를 감싸는 큰 카드 */
     #container {
-        width: 400px;
-        padding: 25px 20px 30px;
+        width: 100%;
+        max-width: 450px;
+        padding: 20px 15px 25px;
         background: #ffffff;
         border-radius: 20px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
@@ -27,9 +41,11 @@
     /* 카드 회전 영역 */
     #card {
         width: 100%;
-        height: 420px;
+        height: 60vh;
+        max-height: 450px;
+        min-height: 300px;
         perspective: 1000px;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
 
     .flip-inner {
@@ -58,12 +74,11 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 25px;
-        box-sizing: border-box;
+        padding: 20px;
     }
 
     .front {
-        font-size: 80px;
+        font-size: clamp(48px, 15vw, 80px);
         font-weight: bold;
         color: #333;
     }
@@ -73,41 +88,61 @@
     }
 
     img {
-        width: 230px;
-        height: 230px;
+        width: 55%;
+        max-width: 230px;
+        height: auto;
+        max-height: 50%;
         object-fit: contain;
         margin-bottom: 15px;
     }
 
     #meaning {
-        font-size: 62px;
+        font-size: clamp(40px, 12vw, 62px);
         color: #444;
-        margin-top: 8px;
+        margin: 8px 0 0 0;
     }
 
     /* 버튼 영역 */
     .button-area {
         display: flex;
         justify-content: center;
-        gap: 15px;
+        gap: 12px;
         margin-top: 10px;
     }
 
     button {
-        padding: 12px 20px;
+        padding: 14px 24px;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         background: #4a90e2;
         color: white;
         cursor: pointer;
-        font-size: 16px;
+        font-size: clamp(14px, 4vw, 18px);
         display: flex;
         align-items: center;
         gap: 6px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    button:hover {
+    button:hover, button:active {
         background: #357ab8;
+    }
+
+    /* 모바일 가로모드 대응 */
+    @media (max-height: 500px) and (orientation: landscape) {
+        #card {
+            height: 45vh;
+            min-height: 200px;
+        }
+        
+        #container {
+            padding: 10px;
+        }
+        
+        .button-area {
+            margin-top: 5px;
+        }
     }
 </style>
 </head>
@@ -149,7 +184,7 @@ fetch('./words.json')
   .then(res => res.json())
   .then(data => {
     words = data;
-    showWord(); // 첫 단어 표시
+    showWord();
   })
   .catch(err => console.error("단어 목록 로딩 실패:", err));
 
@@ -172,13 +207,14 @@ function speakWord() {
 
     const utter = new SpeechSynthesisUtterance(words[index].word);
     utter.lang = "en-US";
+    utter.rate = 0.8;  // 발음 속도 0.8로 설정
     speechSynthesis.speak(utter);
 }
 
 function nextWord() {
     const flipBox = document.getElementById("flipBox");
 
-    // 🔊 현재 재생 중인 발음 강제 종료
+    // 현재 재생 중인 발음 강제 종료
     speechSynthesis.cancel();
 
     // 애니메이션 임시 비활성화
@@ -197,7 +233,6 @@ function nextWord() {
     index = (index + 1) % words.length;
     showWord();
 }
-
 
 // 첫 화면 설정
 showWord();
