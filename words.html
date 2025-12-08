@@ -209,15 +209,16 @@ function speakWord() {
     setTimeout(() => {
         const utter = new SpeechSynthesisUtterance(words[index].word);
         
-        // iOS에서 rate가 잘 적용되는 음성 찾기 (우선순위: Samantha > 로컬 영어 > 아무 영어)
+        // iOS 남성 영어 음성 찾기 (우선순위: Aaron > Daniel > Fred > 아무 영어)
         const voices = speechSynthesis.getVoices();
-        const samantha = voices.find(v => v.name.includes('Samantha'));
-        const localEnglish = voices.find(v => v.lang.startsWith('en') && v.localService);
-        const anyEnglish = voices.find(v => v.lang.startsWith('en'));
+        const aaron = voices.find(v => v.name.includes('Aaron'));
+        const daniel = voices.find(v => v.name.includes('Daniel') && v.lang.startsWith('en'));
+        const fred = voices.find(v => v.name.includes('Fred'));
+        const anyEnglish = voices.find(v => v.lang.startsWith('en') && v.localService);
         
-        utter.voice = samantha || localEnglish || anyEnglish || null;
+        utter.voice = aaron || daniel || fred || anyEnglish || null;
         utter.lang = "en-US";
-        utter.rate = 0.6;   // 더 느리게 (iOS에서 체감되도록)
+        utter.rate = 0.3;   // 더 느리게 (iOS에서 체감되도록)
         utter.pitch = 1;
         
         speechSynthesis.speak(utter);
