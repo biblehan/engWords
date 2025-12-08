@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>초1 영어단어 학습</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #eef5ff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    /* 전체를 감싸는 큰 카드 */
+    #container {
+        width: 400px;
+        padding: 25px 20px 30px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        text-align: center;
+    }
+
+    /* 카드 회전 영역 */
+    #card {
+        width: 100%;
+        height: 420px;
+        perspective: 1000px;
+        margin-bottom: 25px;
+    }
+
+    .flip-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 18px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        cursor: pointer;
+    }
+
+    .flipped {
+        transform: rotateY(180deg);
+    }
+
+    .side {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 18px;
+        backface-visibility: hidden;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 25px;
+        box-sizing: border-box;
+    }
+
+    .front {
+        font-size: 80px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .back {
+        transform: rotateY(180deg);
+    }
+
+    img {
+        width: 230px;
+        height: 230px;
+        object-fit: contain;
+        margin-bottom: 15px;
+    }
+
+    #meaning {
+        font-size: 62px;
+        color: #444;
+        margin-top: 8px;
+    }
+
+    /* 버튼 영역 */
+    .button-area {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 10px;
+        background: #4a90e2;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    button:hover {
+        background: #357ab8;
+    }
+</style>
+</head>
+<body>
+
+<div id="container">
+
+    <!-- 상단: 카드 flip 영역 -->
+    <div id="card">
+        <div id="flipBox" class="flip-inner">
+
+            <!-- 앞면 -->
+            <div class="side front">
+                <div id="word">Apple</div>
+            </div>
+
+            <!-- 뒷면 -->
+            <div class="side back">
+                <img id="image" src="">
+                <p id="meaning">사과</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 하단: 버튼 -->
+    <div class="button-area">
+        <button onclick="speakWord()">🔊 발음</button>
+        <button onclick="nextWord()">다음 ▶</button>
+    </div>
+
+</div>
+
+<script>
+let words = [];
+let index = 0;
+
+fetch('./words.json')
+  .then(res => res.json())
+  .then(data => {
+    words = data;
+    showWord(); // 첫 단어 표시
+  })
+  .catch(err => console.error("단어 목록 로딩 실패:", err));
+
+function showWord() {
+    document.getElementById("word").textContent = words[index].word;
+    document.getElementById("meaning").textContent = words[index].meaning;
+    document.getElementById("image").src = words[index].img;
+
+    // 새 카드로 갈 때 앞면으로 초기화
+    document.getElementById("flipBox").classList.remove("flipped");
+}
+
+document.getElementById("flipBox").addEventListener("click", () => {
+    document.getElementById("flipBox").classList.toggle("flipped");
+});
+
+function speakWord() {
+    // 이전 발음 중단
+    speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(words[index].word);
+    utter.lang = "en-US";
+    speechSynthesis.speak(utter);
+}
+
+function nextWord() {
+    const flipBox = document.getElementById("flipBox");
+
+    // 🔊 현재 재생 중인 발음 강제 종료
+    speechSynthesis.cancel();
+
+    // 애니메이션 임시 비활성화
+    flipBox.style.transition = "none";
+
+    // 강제로 앞면으로 되돌리기
+    flipBox.classList.remove("flipped");
+
+    // 강제 리플로우 실행
+    void flipBox.offsetWidth;
+
+    // 애니메이션 재활성화
+    flipBox.style.transition = "transform 0.6s";
+
+    // 단어 변경
+    index = (index + 1) % words.length;
+    showWord();
+}
+
+
+// 첫 화면 설정
+showWord();
+</script>
+
+</body>
+</html>
