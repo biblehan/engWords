@@ -91,7 +91,10 @@
     }
 
     .flip-hint {
-        margin-top: 15px;
+        position: absolute;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
         font-size: 14px;
         color: #aaa;
         display: flex;
@@ -100,8 +103,8 @@
     }
 
     .flip-icon {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         animation: pulse 2s infinite;
     }
 
@@ -188,9 +191,11 @@
             <div class="side front">
                 <div id="word"> </div>
                 <div class="flip-hint">
-                    <svg class="flip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                        <path d="M3 3v5h5"/>
+                    <svg class="flip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/>
+                        <path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/>
+                        <path d="m7 12 5-5 5 5"/>
+                        <path d="m7 12 5 5 5-5"/>
                     </svg>
                     탭하여 뒤집기
                 </div>
