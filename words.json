@@ -28,5 +28,6 @@
   { "word": "water", "meaning": "물", "img": "./images/water.jpg" },
   { "word": "window", "meaning": "창문", "img": "./images/window.jpg" },
   { "word": "zebra", "meaning": "얼룩말", "img": "./images/zebra.jpg" },
-  { "word": "zero", "meaning": "0", "img": "./images/zero.jpg" }
+  { "word": "zero", "meaning": "숫자 0", "img": "./images/zero.jpg" }
 ]
+
