@@ -38,6 +38,13 @@
         text-align: center;
     }
 
+    /* 진행률 표시 */
+    #progress {
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 10px;
+    }
+
     /* 카드 회전 영역 */
     #card {
         width: 100%;
@@ -150,19 +157,22 @@
 
 <div id="container">
 
+    <!-- 진행률 -->
+    <div id="progress"></div>
+
     <!-- 상단: 카드 flip 영역 -->
     <div id="card">
         <div id="flipBox" class="flip-inner">
 
             <!-- 앞면 -->
             <div class="side front">
-                <div id="word">Apple</div>
+                <div id="word"> </div>
             </div>
 
             <!-- 뒷면 -->
             <div class="side back">
                 <img id="image" src="">
-                <p id="meaning">사과</p>
+                <p id="meaning"> </p>
             </div>
 
         </div>
@@ -177,21 +187,35 @@
 </div>
 
 <script>
-let words = [];
+let originalWords = [];  // 원본 단어 배열
+let shuffledWords = [];  // 셔플된 단어 배열
 let index = 0;
+
+// Fisher-Yates 셔플 알고리즘
+function shuffle(array) {
+    const arr = [...array];  // 복사본 생성
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
 
 fetch('./words.json')
   .then(res => res.json())
   .then(data => {
-    words = data;
+    originalWords = data;
+    shuffledWords = shuffle(originalWords);
+    index = 0;
     showWord();
   })
   .catch(err => console.error("단어 목록 로딩 실패:", err));
 
 function showWord() {
-    document.getElementById("word").textContent = words[index].word;
-    document.getElementById("meaning").textContent = words[index].meaning;
-    document.getElementById("image").src = words[index].img;
+    document.getElementById("word").textContent = shuffledWords[index].word;
+    document.getElementById("meaning").textContent = shuffledWords[index].meaning;
+    document.getElementById("image").src = shuffledWords[index].img;
+    document.getElementById("progress").textContent = `${index + 1} / ${shuffledWords.length}`;
 
     // 새 카드로 갈 때 앞면으로 초기화
     document.getElementById("flipBox").classList.remove("flipped");
@@ -201,35 +225,69 @@ document.getElementById("flipBox").addEventListener("click", () => {
     document.getElementById("flipBox").classList.toggle("flipped");
 });
 
+// 선호하는 음성 찾기 (iOS 고품질 음성 우선)
+function findBestVoice(voices) {
+    // iOS/macOS 고품질 영어 음성 우선순위
+    const preferredNames = [
+        'Samantha',      // iOS 기본 여성 (매우 자연스러움)
+        'Karen',         // 호주 영어 여성
+        'Daniel',        // 영국 영어 남성
+        'Moira',         // 아일랜드 영어 여성
+        'Tessa',         // 남아공 영어 여성
+        'Aaron',         // 미국 영어 남성
+        'Google US English',  // Android용
+        'Microsoft David',    // Windows용
+    ];
+    
+    // 우선순위대로 찾기
+    for (const name of preferredNames) {
+        const voice = voices.find(v => 
+            v.name.includes(name) && v.lang.startsWith('en')
+        );
+        if (voice) return voice;
+    }
+    
+    // 못 찾으면 로컬 영어 음성 아무거나
+    return voices.find(v => v.lang.startsWith('en') && v.localService) || 
+           voices.find(v => v.lang.startsWith('en')) || 
+           null;
+}
+
+let selectedVoice = null;
+
 function speakWord() {
     // 이전 발음 중단
     speechSynthesis.cancel();
 
     // iOS Safari 버그 우회: 약간의 딜레이 후 실행
     setTimeout(() => {
-        const utter = new SpeechSynthesisUtterance(words[index].word);
+        const word = shuffledWords[index].word;
         
-        // iOS 남성 영어 음성 찾기 (우선순위: Aaron > Daniel > Fred > 아무 영어)
+        // 끝 발음을 명확하게 하기 위해 뒤에 짧은 pause 추가
+        const utter = new SpeechSynthesisUtterance(word + " .");
+        
+        // 캐싱된 음성 사용 또는 새로 찾기
         const voices = speechSynthesis.getVoices();
-        const aaron = voices.find(v => v.name.includes('Aaron'));
-        const daniel = voices.find(v => v.name.includes('Daniel') && v.lang.startsWith('en'));
-        const fred = voices.find(v => v.name.includes('Fred'));
-        const anyEnglish = voices.find(v => v.lang.startsWith('en') && v.localService);
+        if (!selectedVoice || !voices.includes(selectedVoice)) {
+            selectedVoice = findBestVoice(voices);
+        }
         
-        utter.voice = aaron || daniel || fred || anyEnglish || null;
+        utter.voice = selectedVoice;
         utter.lang = "en-US";
-        utter.rate = 0.3;   // 더 느리게 (iOS에서 체감되도록)
+        utter.rate = 0.5;    // 0.3은 너무 느려서 끊김, 0.5가 적당
         utter.pitch = 1;
+        utter.volume = 1;
         
         speechSynthesis.speak(utter);
-    }, 150);
+    }, 100);
 }
 
 // iOS Safari: 음성 목록 로딩을 위해 미리 초기화
 if (typeof speechSynthesis !== 'undefined') {
     speechSynthesis.getVoices();
     speechSynthesis.onvoiceschanged = () => {
-        speechSynthesis.getVoices();
+        const voices = speechSynthesis.getVoices();
+        selectedVoice = findBestVoice(voices);
     };
 }
 
@@ -251,13 +309,17 @@ function nextWord() {
     // 애니메이션 재활성화
     flipBox.style.transition = "transform 0.6s";
 
-    // 단어 변경
-    index = (index + 1) % words.length;
+    // 다음 단어로
+    index++;
+    
+    // 모든 단어를 다 봤으면 다시 셔플
+    if (index >= shuffledWords.length) {
+        shuffledWords = shuffle(originalWords);
+        index = 0;
+    }
+    
     showWord();
 }
-
-// 첫 화면 설정
-showWord();
 </script>
 
 </body>
